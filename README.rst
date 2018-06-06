@@ -20,24 +20,24 @@ and running the setup program::
     $ source .venv/bin/activate
 
 The setup script creates a virtual environment with the
-required dependencies. It assumed a `python3` is in the
+required dependencies. It assumed a ``python3`` is in the
 PATH.
 
 If one wants to build the documentation into HTML files,
-`sphinx` and `sphinx_rtd_theme` are needed::
+``sphinx`` and ``sphinx_rtd_theme`` are needed::
 
     $ pip install sphinx spinx_rtd_theme
     $ cd doc
     $ make
 
-Then view the result with a browser in the `_build` directory.
+Then view the result with a browser in the ``_build``` directory.
 
 Configuration
 -------------
 
-The project misses a `SECRET_KEY` and the `ALLOWED_HOSTS`
+The project misses a ``SECRET_KEY`` and the ``ALLOWED_HOSTS``
 from it's settings. These should be added to a file called
-`local_settings.py` in the `tym` directory.
+``local_settings.py`` in the ``tym`` directory.
 
 How to setup a production level Django server is beyond the
 scope of this document. However, to see if the project is
