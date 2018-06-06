@@ -28,7 +28,7 @@ If one wants to build the documentation into HTML files,
 
     $ pip install sphinx spinx_rtd_theme
     $ cd doc
-    $ make
+    $ make html
 
 Then view the result with a browser in the ``_build`` directory.
 

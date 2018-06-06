@@ -5,6 +5,16 @@
 import os
 import sys
 
+try:
+    sys.path.insert(
+        0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+    # noinspection PyUnresolvedReferences
+    import ll2addr
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tym.settings')
+except ImportError:
+    raise
+
 # noinspection PyPackageRequirements
 import sphinx_rtd_theme
 

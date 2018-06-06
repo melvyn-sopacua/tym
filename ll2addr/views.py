@@ -37,8 +37,8 @@ class AddressDetailView(APIView):
         which is assumed to be an instance of a class extending AddressAdapter.
 
         If none is provided, the adapter is fetched from settings.
-        :return:
-        :rtype:
+
+        :return: An instance of a subclass of AddressAdapter
         """
         if not hasattr(self, 'address_adapter'):
             dotted = settings.LL2ADDR.get('ADDRESS_ADAPTER')
