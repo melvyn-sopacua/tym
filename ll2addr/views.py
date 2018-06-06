@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseNotFound
 from django.utils.module_loading import import_string
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from urlobject import URLObject
@@ -75,6 +76,12 @@ class AddressDetailView(APIView):
             raise ValidationError('Response is not OK')
         return response.json()
 
+    def _cache_key(self, lon, lat) -> Optional[dict]:
+        prefix = getattr(self, 'cache_key_prefix', '')
+
+        # TechDebt: Probably hash this at some point
+        return prefix + str(lon) + '--' + str(lat)
+
     def fetch_address(self, lon: Any, lat: Any) -> Optional[dict]:
         """
         Fetch the address from the remote API and format it as a dict
@@ -107,7 +114,13 @@ class AddressDetailView(APIView):
         lon = self.request.GET.get('lon', None)
         lat = self.request.GET.get('lat', None)
         if all([lon, lat]):
-            return self.fetch_address(lon, lat)
+            key = self._cache_key(lon, lat)
+            data = cache.get(key, None)
+            if not data:
+                data = self.fetch_address(lon, lat)
+                cache.set(key, data)
+
+            return data
         return None
 
     # noinspection PyShadowingBuiltins
@@ -124,6 +137,7 @@ class OSMAddressView(AddressDetailView):
         'building',
         'place'
     )
+    cache_key_prefix = 'osm--'
 
     def clean(self, response):
         data = super().clean(response)

@@ -1,4 +1,4 @@
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 from ll2addr.serializers import OSMAdapter, Address
 import json
 
@@ -29,7 +29,7 @@ class AdapterTest(SimpleTestCase):
         self.assertEqual(address.country, 'UK')
 
 
-class AddressViewTest(SimpleTestCase):
+class AddressViewTest(TestCase):
     def get_response(self, lon, lat):
         r = self.client.get(
             '/api/address',
@@ -69,8 +69,8 @@ class AddressViewTest(SimpleTestCase):
             '/api/address',
             data={'lon': '58.7167', 'lat': '83.0112'}
         )
-        # Even more north, aka not geocodable
         self.assertTrue(r.status_code, 404)
+        # Even more north, aka not geocodable
         r = self.client.get(
             '/api/address',
             data={'lon': '58.7167', 'lat': '89.0112'}
