@@ -120,6 +120,15 @@ CACHES = {
     }
 }
 
+LL2ADDR = {
+    'API_BASE_URL': 'https://nominatim.openstreetmap.org/',
+    'API_ENDPOINT': 'reverse',
+    'API_ADDITIONAL_PARAMS': {
+        'format': 'jsonv2',
+        'addressdetails': '1',
+        'zoom': '18',
+    },
+}
 # Load environment specific settings
 local_module = os.getenv("LOCAL_SETTINGS_MODULE", "local_settings.py")
 f = os.path.join(PROJECT_APP_PATH, local_module)
