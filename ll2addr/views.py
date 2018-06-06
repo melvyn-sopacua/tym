@@ -20,7 +20,7 @@ class AddressDetail(APIView):
         return URLObject(base_url).add_path(endpoint)
 
     def format_address(self, data: dict) -> dict:
-        return data
+        return {'address': data['display_name'], 'components': data['address']}
 
     def fetch_address(self, lon, lat) -> Optional[dict]:
         """
@@ -50,6 +50,7 @@ class AddressDetail(APIView):
             return self.fetch_address(lon, lat)
         return None
 
+    # noinspection PyShadowingBuiltins
     def get(self, request, format=None):
         obj = self.get_address()
         if obj is None:
