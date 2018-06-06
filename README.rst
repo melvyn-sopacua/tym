@@ -30,7 +30,7 @@ If one wants to build the documentation into HTML files,
     $ cd doc
     $ make
 
-Then view the result with a browser in the ``_build``` directory.
+Then view the result with a browser in the ``_build`` directory.
 
 Configuration
 -------------

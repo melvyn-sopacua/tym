@@ -69,8 +69,11 @@ class AddressDetailView(APIView):
         200 OK response. This is the hook that should reject input that
         doesn't conform to our standards.
 
+        The default implementation just verifies response.ok and returns the
+        the json data converted to native python dict, without modification.
+
         :param response: requests.Response object
-        :return:
+        :return: The JSON data as dict
         """
         if not response.ok:
             raise ValidationError('Response is not OK')
@@ -140,6 +143,15 @@ class OSMAddressView(AddressDetailView):
     cache_key_prefix = 'osm--'
 
     def clean(self, response):
+        """
+        OSM specific cleaning
+
+        - Only allow 2 address types that are known to give us good data
+        - Handle coordinates that cannot be geocoded.
+
+        :param response: requests.Response object
+        :return: The JSON data as dict
+        """
         data = super().clean(response)
         if 'error' in data:
             raise ValidationError('Unable to geocode coordinates')
