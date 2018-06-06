@@ -2,3 +2,4 @@ __pycache__
 local_settings.py
 .venv
 *.sqlite3
+doc/_build
