@@ -40,4 +40,11 @@ class AddressViewTest(SimpleTestCase):
             data = r.json()
         except ValueError:
             raise ValueError(r._body)
-        self.assertTrue('address' in data)
+        self.assertTrue('display' in data)
+        self.assertEqual(data['display'], "137, Pilkington Avenue, Sutton "
+                                          "Coldfield, Birmingham, "
+                                          "West Midlands Combined Authority, "
+                                          "West Midlands, England, B72 1LH, UK")
+        self.assertEqual(data['postal_code'], 'B72 1LH')
+        self.assertEqual(data['country'], 'UK')
+        self.assertEqual(data['address_type'], 'building')

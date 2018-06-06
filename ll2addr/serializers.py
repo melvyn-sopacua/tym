@@ -37,7 +37,7 @@ class AddressAdapter(object):
     def _get_val(self, path):
         return reduce(operator.getitem, path.split('.'), self.data)
 
-    def get_address(self, data: dict) -> Address:
+    def get_address(self, data) -> Address:
         self.data = data
         kwargs = {}
         for key, path in self.field_map.items():

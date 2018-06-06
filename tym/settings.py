@@ -128,6 +128,7 @@ LL2ADDR = {
         'addressdetails': '1',
         'zoom': '18',
     },
+    'ADDRESS_ADAPTER': 'll2addr.serializers.OSMAdapter',
 }
 # Load environment specific settings
 local_module = os.getenv("LOCAL_SETTINGS_MODULE", "local_settings.py")

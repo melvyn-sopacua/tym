@@ -1,10 +1,13 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.http import Http404
-import requests
-from urlobject import URLObject
-from django.conf import settings
 from typing import Any, Optional
+
+import requests
+from django.conf import settings
+from django.http import Http404
+from django.utils.module_loading import import_string
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from urlobject import URLObject
+from .serializers import AddressAdapter, AddressSerializer
 
 
 class AddressDetail(APIView):
@@ -19,15 +22,43 @@ class AddressDetail(APIView):
         endpoint = settings.LL2ADDR.get('API_ENDPOINT')
         return URLObject(base_url).add_path(endpoint)
 
-    def format_address(self, data: dict) -> dict:
-        return {'address': data['display_name'], 'components': data['address']}
+    def get_adapter(self) -> AddressAdapter:
+        """
+        Get the adapter that adapts remote output to serializer input
 
-    def fetch_address(self, lon, lat) -> Optional[dict]:
+        Views extending this view can set a property `address_adapter`,
+        which is assumed to be an instance of a class extending AddressAdapter.
+
+        If none is provided, the adapter is fetched from settings.
+        :return:
+        :rtype:
+        """
+        if not hasattr(self, 'address_adapter'):
+            dotted = settings.LL2ADDR.get('ADDRESS_ADAPTER')
+            klass = import_string(dotted)
+            setattr(self, 'address_adapter', klass())
+
+        return getattr(self, 'address_adapter')
+
+    def serialize_address(self, data: Any) -> dict:
+        """
+        Serialize input data to dictionary with the correct key/value pairs
+
+        Given the provided data, make dictionary representing the address.
+
+        :param data: Input data
+        :return: A dictionary representing an Address object
+        """
+        adapter = self.get_adapter()
+        serializer = AddressSerializer(adapter.get_address(data))
+        return serializer.data
+
+    def fetch_address(self, lon: Any, lat: Any) -> Optional[dict]:
         """
         Fetch the address from the remote API and format it as a dict
 
         The dictionary returned should contain information as specified by
-        this API's documentation. This is delegated to `format_address`.
+        this API's documentation. This is delegated to `serialize_address`.
         If no valid object can be obtained, we should return None
 
         :param lon: Location longtitude
@@ -41,9 +72,14 @@ class AddressDetail(APIView):
         r = requests.get(url, params=params)
         if not r.ok:
             return None
-        return self.format_address(r.json())
+        return self.serialize_address(r.json())
 
-    def get_address(self):
+    def get_address(self) -> dict:
+        """
+        The equivalent of get_object()
+
+        :return: An Address object serialized to dictionary
+        """
         lon = self.request.GET.get('lon', None)
         lat = self.request.GET.get('lat', None)
         if all([lon, lat]):
