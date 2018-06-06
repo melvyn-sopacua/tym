@@ -30,16 +30,21 @@ class AdapterTest(SimpleTestCase):
 
 
 class AddressViewTest(SimpleTestCase):
-    def test_get(self):
+    def get_response(self, lon, lat):
         r = self.client.get(
             '/api/address',
-            data={'lon': '-1.81602098644987', 'lat': '52.5487429714954'}
+            data={'lon': lon, 'lat': lat}
         )
         self.assertTrue(r.status_code, 200)
         try:
             data = r.json()
         except ValueError:
             raise ValueError(r._body)
+        else:
+            return data
+
+    def test_uk(self):
+        data = self.get_response('-1.81602098644987', '52.5487429714954')
         self.assertTrue('display' in data)
         self.assertEqual(data['display'], "137, Pilkington Avenue, Sutton "
                                           "Coldfield, Birmingham, "
@@ -48,3 +53,26 @@ class AddressViewTest(SimpleTestCase):
         self.assertEqual(data['postal_code'], 'B72 1LH')
         self.assertEqual(data['country'], 'UK')
         self.assertEqual(data['address_type'], 'building')
+
+    def test_nl(self):
+        data = self.get_response('6.10918', '53.11214')
+        self.assertTrue('display' in data)
+        self.assertEqual(data['display'], '23, Bloemkamp, Drachten, '
+                                          'Smallingerland, Fryslân, '
+                                          'Nederland, 9202CB, Nederland')
+        self.assertEqual(data['postal_code'], '9202CB')
+        self.assertEqual(data['country'], 'Nederland')
+
+    def test_errors(self):
+        # Northpole somehwere in Russia, but not a building, but state boundary
+        r = self.client.get(
+            '/api/address',
+            data={'lon': '58.7167', 'lat': '83.0112'}
+        )
+        # Even more north, aka not geocodable
+        self.assertTrue(r.status_code, 404)
+        r = self.client.get(
+            '/api/address',
+            data={'lon': '58.7167', 'lat': '89.0112'}
+        )
+        self.assertTrue(r.status_code, 404)

@@ -30,6 +30,15 @@ class AddressAdapter(object):
     field_map = {}
 
     def __init__(self):
+        """
+        Base adapter for an Address
+
+        This adapter has two main components:
+        - A class-level field map that should map input data keys to Address
+        class fields
+        - A method get_address() that does the actual conversion with the
+        given data
+        """
         self.data = None
         if not self.field_map:
             raise ValueError('No field map declared for adapter')
@@ -38,6 +47,13 @@ class AddressAdapter(object):
         return reduce(operator.getitem, path.split('.'), self.data)
 
     def get_address(self, data) -> Address:
+        """
+        Take the given input data and return an Address instance representing it
+
+        :param data: Input data, by default this is assumed to be a
+        dictionary-like object.
+        :return: The address with correct fields mapped to the input data
+        """
         self.data = data
         kwargs = {}
         for key, path in self.field_map.items():

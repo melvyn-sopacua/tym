@@ -2,15 +2,21 @@ from typing import Any, Optional
 
 import requests
 from django.conf import settings
-from django.http import Http404
+from django.http import HttpResponseNotFound
 from django.utils.module_loading import import_string
+from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from urlobject import URLObject
-from .serializers import AddressAdapter, AddressSerializer
+from .serializers import AddressAdapter, AddressSerializer, OSMAdapter
+
+__all__ = (
+    'AddressDetailView',
+    'OSMAddressView',
+)
 
 
-class AddressDetail(APIView):
+class AddressDetailView(APIView):
     # noinspection PyMethodMayBeStatic
     def get_remote_endpoint(self) -> URLObject:
         """
@@ -53,6 +59,22 @@ class AddressDetail(APIView):
         serializer = AddressSerializer(adapter.get_address(data))
         return serializer.data
 
+    # noinspection PyMethodMayBeStatic
+    def clean(self, response):
+        """
+        Validate if response is correct, then clean and return the data
+
+        Some API's (including OSM) return an error object in JSON, but with a
+        200 OK response. This is the hook that should reject input that
+        doesn't conform to our standards.
+
+        :param response: requests.Response object
+        :return:
+        """
+        if not response.ok:
+            raise ValidationError('Response is not OK')
+        return response.json()
+
     def fetch_address(self, lon: Any, lat: Any) -> Optional[dict]:
         """
         Fetch the address from the remote API and format it as a dict
@@ -70,9 +92,11 @@ class AddressDetail(APIView):
         params['lat'] = lat
         url = self.get_remote_endpoint()
         r = requests.get(url, params=params)
-        if not r.ok:
+        try:
+            data = self.clean(r)
+        except ValidationError:
             return None
-        return self.serialize_address(r.json())
+        return self.serialize_address(data)
 
     def get_address(self) -> dict:
         """
@@ -90,5 +114,24 @@ class AddressDetail(APIView):
     def get(self, request, format=None):
         obj = self.get_address()
         if obj is None:
-            return Http404
+            return HttpResponseNotFound()
         return Response(obj)
+
+
+class OSMAddressView(AddressDetailView):
+    address_adapter = OSMAdapter()
+    valid_address_types = (
+        'building',
+        'place'
+    )
+
+    def clean(self, response):
+        data = super().clean(response)
+        if 'error' in data:
+            raise ValidationError('Unable to geocode coordinates')
+
+        if data.get('addresstype', '') not in self.valid_address_types:
+            raise ValidationError('Not a building address')
+
+        return data
+
