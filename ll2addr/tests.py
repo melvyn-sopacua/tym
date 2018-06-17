@@ -1,10 +1,12 @@
-from django.test import SimpleTestCase, TestCase
-from ll2addr.serializers import OSMAdapter, Address
 import json
+
+from django.test import SimpleTestCase, TestCase
+from services.geo import Address
+from services.geo.osm import OSMAddressAdapter, NOT_FOUND
 
 
 class AdapterTest(SimpleTestCase):
-    adapter = OSMAdapter()
+    adapter = OSMAddressAdapter()
     osm_data = '{"place_id":"91015268","licence":"Data © OpenStreetMap ' \
                'contributors, ODbL 1.0. https:\/\/osm.org\/copyright",' \
                '"osm_type":"way","osm_id":"90394420","lat":"52.54877605",' \
@@ -69,10 +71,18 @@ class AddressViewTest(TestCase):
             '/api/address',
             data={'lon': '58.7167', 'lat': '83.0112'}
         )
-        self.assertTrue(r.status_code, 404)
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertEqual(
+            data['display'], 'Архангельская область, Северо-Западный '
+                             'федеральный округ, РФ'
+        )
+        self.assertEqual(data['country'], 'РФ')
         # Even more north, aka not geocodable
         r = self.client.get(
             '/api/address',
             data={'lon': '58.7167', 'lat': '89.0112'}
         )
-        self.assertTrue(r.status_code, 404)
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertEqual(data['display'], NOT_FOUND)

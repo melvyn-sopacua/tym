@@ -3,6 +3,16 @@ from getrest.authentication import NoAuthenticationRestAuthenticator
 from .adapters import AddressAdapter
 from . import Address
 
+__all__ = (
+    'NOT_FOUND',
+    'OSMAddressAdapter',
+    'OSMApi',
+    'ReverseGeoEndpoint',
+    'get_address'
+)
+
+NOT_FOUND = 'No location found'
+
 
 class OSMAddressAdapter(AddressAdapter):
     field_map = {
@@ -46,4 +56,4 @@ def get_address(lon, lat):
         if 'error' not in data:
             return OSMAddressAdapter().get_address(data)
 
-    return Address(display='No location found')
+    return Address(display=NOT_FOUND)
