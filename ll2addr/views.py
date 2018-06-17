@@ -5,7 +5,7 @@ from django.conf import settings
 from django.http import HttpResponseNotFound
 from django.utils.module_loading import import_string
 from django.core.exceptions import ValidationError
-from django.core.cache import cache
+from services.cache import get_cache
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from urlobject import URLObject
@@ -15,6 +15,8 @@ __all__ = (
     'AddressDetailView',
     'OSMAddressView',
 )
+
+cache = get_cache('django')
 
 
 class AddressDetailView(APIView):
@@ -118,10 +120,10 @@ class AddressDetailView(APIView):
         lat = self.request.GET.get('lat', None)
         if all([lon, lat]):
             key = self._cache_key(lon, lat)
-            data = cache.get(key, None)
-            if not data:
+            data = cache.fetch(key)
+            if data is None:
                 data = self.fetch_address(lon, lat)
-                cache.set(key, data)
+                cache.store(key, data)
 
             return data
         return None
